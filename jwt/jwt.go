@@ -11,7 +11,7 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-var jwtSecret = []byte("jsdjnsndnfDJNFjafkldlflfklwlkeiejfnjvnv")
+var jwtSecret = []byte("jsdjnsndnfDJNFjafkldlflfklwlkeiejfnjvnv") // ik thats need to be secure
 
 func GenerateJWT(ID string, Role string) (string, error) {
 	claims := &CustomClaims{

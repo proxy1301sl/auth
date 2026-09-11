@@ -19,12 +19,12 @@ type User struct {
 }
 
 func (s *Storage) UserData(ctx context.Context, res User) error {
-	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (email, hash, id, role) VALUES ( ?, ?)")
+	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (email, hash, id) VALUES ( ?, ?, ?)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, res.Email, res.Hash, res.ID)
+	_, err = stmt.ExecContext(ctx, res.Email, res.Hash, res.ID, res.Role)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (s *Storage) UserData(ctx context.Context, res User) error {
 }
 
 func NewStorage(dbPath string) (*Storage, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func NewStorage(dbPath string) (*Storage, error) {
 		return nil, err
 	}
 
-	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, email TEXT, id TEXT, role TEXT)")
+	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS users (hash TEXT, email TEXT, id TEXT, role TEXT NOT NULL DEFAULT 'user' )")
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func NewStorage(dbPath string) (*Storage, error) {
 
 func (s *Storage) GetUser(ctx context.Context, email string) (User, error) {
 	var u User
-	rows := s.db.QueryRowContext(ctx, "SELECT id, email, password_hash, role FROM users WHERE email = ?", email)
+	rows := s.db.QueryRowContext(ctx, "SELECT id, email, hash, role FROM users WHERE email = ?", email)
 	err := rows.Scan(&u.ID, &u.Email, &u.Hash, &u.Role)
 	if err != nil {
 		return u, err

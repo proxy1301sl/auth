@@ -18,15 +18,10 @@ type RequestAuth struct {
 	Password string `json:"password"`
 }
 
-type LoginAuth struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func Register(s *repo.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RequestAuth
-		Id := uuid.NewString()
+		id := uuid.NewString()
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -35,15 +30,16 @@ func Register(s *repo.Storage) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		Encr, err := hash.HashedPassword(req.Password)
+		encr, err := hash.HashedPassword(req.Password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		res := repo.User{
 			Email: req.Email,
-			Hash:  Encr,
-			ID:    Id,
+			Hash:  encr,
+			ID:    id,
+			Role:  "",
 		}
 		err = s.UserData(r.Context(), res)
 		if err != nil {

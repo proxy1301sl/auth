@@ -18,8 +18,8 @@ func main() {
 	storage, err := repo.NewStorage("")
 	if err != nil {
 		log.Fatal(err)
-
 	}
 	http.ListenAndServe(":8080", r)
 	r.Post("/api/auth/register", handler.Register(storage))
+	r.Post("/api/auth/login", handler.Login(storage))
 }
