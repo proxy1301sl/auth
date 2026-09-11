@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	hash "https/github.com/proxy1301sl/auth/internal"
+	"https/github.com/proxy1301sl/auth/jwt"
 	"https/github.com/proxy1301sl/auth/repo"
 )
 
@@ -77,11 +78,29 @@ func Login(s *repo.Storage) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
 		if err := ValidateLogin(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		user, err := s.GetUser(r.Context(), req.Email)
+		if err != nil {
+			http.Error(w, "invalid email or password", http.StatusUnauthorized)
+			return
+		}
+		validate := hash.CheckPasswordHash(req.Password, user.Hash)
+		if !validate {
+			http.Error(w, "invalid email or password", http.StatusUnauthorized)
+			return
+		}
+		token, err := jwt.GenerateJWT(user.ID, user.Role)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		res := map[string]string{"token": token}
+		json.NewEncoder(w).Encode(res)
 
 	}
 }
