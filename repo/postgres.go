@@ -11,14 +11,15 @@ type Storage struct {
 	db *sql.DB
 }
 
-type SaveUser struct {
+type User struct {
 	Email string
 	Hash  string
 	ID    string
+	Role  string
 }
 
-func (s *Storage) UserData(ctx context.Context, res SaveUser) error {
-	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (email, hash, id) VALUES ( ?, ?)")
+func (s *Storage) UserData(ctx context.Context, res User) error {
+	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (email, hash, id, role) VALUES ( ?, ?)")
 	if err != nil {
 		return err
 	}
@@ -40,7 +41,7 @@ func NewStorage(dbPath string) (*Storage, error) {
 		return nil, err
 	}
 
-	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, email TEXT, id TEXT)")
+	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, email TEXT, id TEXT, role TEXT)")
 	if err != nil {
 		return nil, err
 	}
@@ -50,4 +51,14 @@ func NewStorage(dbPath string) (*Storage, error) {
 		return nil, err
 	}
 	return &Storage{db: db}, nil
+}
+
+func (s *Storage) GetUser(ctx context.Context, email string) (User, error) {
+	var u User
+	rows := s.db.QueryRowContext(ctx, "SELECT id, email, password_hash, role FROM users WHERE email = ?", email)
+	err := rows.Scan(&u.ID, &u.Email, &u.Hash, &u.Role)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
 }

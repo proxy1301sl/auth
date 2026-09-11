@@ -17,10 +17,15 @@ type RequestAuth struct {
 	Password string `json:"password"`
 }
 
+type LoginAuth struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func Register(s *repo.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RequestAuth
-		id := uuid.NewString()
+		Id := uuid.NewString()
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -29,15 +34,15 @@ func Register(s *repo.Storage) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		encr, err := hash.HashedPassword(req.Password)
+		Encr, err := hash.HashedPassword(req.Password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		res := repo.SaveUser{
+		res := repo.User{
 			Email: req.Email,
-			Hash:  encr,
-			ID:    id,
+			Hash:  Encr,
+			ID:    Id,
 		}
 		err = s.UserData(r.Context(), res)
 		if err != nil {
@@ -63,4 +68,20 @@ func ValidateLogin(req *RequestAuth) error {
 		return errors.New("invalid email")
 	}
 	return nil
+}
+
+func Login(s *repo.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req RequestAuth
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if err := ValidateLogin(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+	}
 }
