@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"https/github.com/proxy1301sl/auth/internal/handler"
+	"https/github.com/proxy1301sl/auth/middlewareauth"
 	"https/github.com/proxy1301sl/auth/repo"
 )
 
@@ -19,7 +20,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	http.ListenAndServe(":8080", r)
-	r.Post("/api/auth/register", handler.Register(storage))
-	r.Post("/api/auth/login", handler.Login(storage))
+	r.Post("/api/register", handler.Register(storage))
+
+	r.Post("/api/login", handler.Login(storage))
+
+	r.Group(func(r chi.Router) {
+		r.Use(middlewareauth.AuthMiddleware)
+		r.Get("/api/profile", handler.Profile(storage))
+
+	})
+	log.Fatal(http.ListenAndServe(":8080", r))
+
 }

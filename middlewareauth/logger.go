@@ -1,4 +1,4 @@
-package middleware
+package middlewareauth
 
 import (
 	"log/slog"

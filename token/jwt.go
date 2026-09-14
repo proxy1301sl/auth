@@ -1,6 +1,7 @@
-package jwt
+package token
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -11,10 +12,10 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-var jwtSecret = []byte("jsdjnsndnfDJNFjafkldlflfklwlkeiejfnjvnv") // ik thats need to be secure
+var JwtSecret = []byte("jsdjnsndnfDJNFjafkldlflfklwlkeiejfnjvnv") // ik thats need to be secure
 
-func GenerateJWT(ID string, Role string) (string, error) {
-	claims := &CustomClaims{
+func GenerateJWT(ID, Role string) (string, error) {
+	Claims := &CustomClaims{
 		Role: Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   ID,
@@ -22,11 +23,29 @@ func GenerateJWT(ID string, Role string) (string, error) {
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtSecret)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims)
+	tokenString, err := token.SignedString(JwtSecret)
 	if err != nil {
 		return "", err
 
 	}
 	return tokenString, nil
+}
+
+func VerifyJWT(tokenString string) (*CustomClaims, error) {
+	claims := &CustomClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return JwtSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	return claims, nil
 }

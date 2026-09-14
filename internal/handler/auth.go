@@ -8,9 +8,10 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
+	authctx "https/github.com/proxy1301sl/auth"
 	hash "https/github.com/proxy1301sl/auth/internal"
-	"https/github.com/proxy1301sl/auth/jwt"
 	"https/github.com/proxy1301sl/auth/repo"
+	"https/github.com/proxy1301sl/auth/token"
 )
 
 type RequestAuth struct {
@@ -88,7 +89,7 @@ func Login(s *repo.Storage) http.HandlerFunc {
 			http.Error(w, "invalid email or password", http.StatusUnauthorized)
 			return
 		}
-		token, err := jwt.GenerateJWT(user.ID, user.Role)
+		token, err := token.GenerateJWT(user.ID, user.Role)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -97,6 +98,30 @@ func Login(s *repo.Storage) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		res := map[string]string{"token": token}
 		json.NewEncoder(w).Encode(res)
+
+	}
+}
+
+func Profile(s *repo.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, ok := authctx.FromUserId(r.Context())
+		if !ok {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		user, err := s.GetUserByID(r.Context(), userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		resp := repo.Response{
+			ID:    userID,
+			Email: user.Email,
+			Role:  user.Role,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
 
 	}
 }

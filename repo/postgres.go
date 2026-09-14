@@ -18,6 +18,12 @@ type User struct {
 	Role  string
 }
 
+type Response struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+}
+
 func (s *Storage) UserData(ctx context.Context, res User) error {
 	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (email, hash, id) VALUES ( ?, ?, ?)")
 	if err != nil {
@@ -61,4 +67,15 @@ func (s *Storage) GetUser(ctx context.Context, email string) (User, error) {
 		return u, err
 	}
 	return u, nil
+}
+
+func (s *Storage) GetUserByID(ctx context.Context, id string) (User, error) {
+	var u User
+	rows := s.db.QueryRowContext(ctx, `SELECT id, email, hash, role FROM users WHERE id = ?`, id)
+	err := rows.Scan(&u.ID, &u.Email, &u.Hash, &u.Role)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
+
 }
