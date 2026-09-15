@@ -23,6 +23,7 @@ func Register(s *repo.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RequestAuth
 		id := uuid.NewString()
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -71,6 +72,7 @@ func ValidateLogin(req *RequestAuth) error {
 func Login(s *repo.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RequestAuth
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

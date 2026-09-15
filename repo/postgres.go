@@ -25,6 +25,7 @@ type Response struct {
 }
 
 func (s *Storage) UserData(ctx context.Context, res User) error {
+	s.db.SetMaxOpenConns(1)
 	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (email, hash, id, role) VALUES ( ?, ?, ?, ?)")
 	if err != nil {
 		return err
@@ -61,6 +62,7 @@ func NewStorage(dbPath string) (*Storage, error) {
 
 func (s *Storage) GetUser(ctx context.Context, email string) (User, error) {
 	var u User
+	s.db.SetMaxOpenConns(1)
 	rows := s.db.QueryRowContext(ctx, "SELECT id, email, hash, role FROM users WHERE email = ?", email)
 	err := rows.Scan(&u.ID, &u.Email, &u.Hash, &u.Role)
 	if err != nil {
@@ -71,6 +73,7 @@ func (s *Storage) GetUser(ctx context.Context, email string) (User, error) {
 
 func (s *Storage) GetUserByID(ctx context.Context, id string) (User, error) {
 	var u User
+	s.db.SetMaxOpenConns(1)
 	rows := s.db.QueryRowContext(ctx, `SELECT id, email, hash, role FROM users WHERE id = ?`, id)
 	err := rows.Scan(&u.ID, &u.Email, &u.Hash, &u.Role)
 	if err != nil {
