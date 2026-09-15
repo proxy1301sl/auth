@@ -25,7 +25,7 @@ type Response struct {
 }
 
 func (s *Storage) UserData(ctx context.Context, res User) error {
-	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (email, hash, id) VALUES ( ?, ?, ?)")
+	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (email, hash, id, role) VALUES ( ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}

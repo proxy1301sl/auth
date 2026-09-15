@@ -8,8 +8,6 @@ import (
 	"https/github.com/proxy1301sl/auth/token"
 )
 
-type ContextKey string
-
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		req := r.Header.Get("Authorization")
