@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	authctx "https/github.com/proxy1301sl/auth"
 	"https/github.com/proxy1301sl/auth/token"
+	authctx "https/github.com/proxy1301sl/auth/utils"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {

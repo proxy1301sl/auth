@@ -8,10 +8,9 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
-	authctx "https/github.com/proxy1301sl/auth"
-	hash "https/github.com/proxy1301sl/auth/internal"
 	"https/github.com/proxy1301sl/auth/repo"
 	"https/github.com/proxy1301sl/auth/token"
+	authctx "https/github.com/proxy1301sl/auth/utils"
 )
 
 type RequestAuth struct {
@@ -33,23 +32,26 @@ func Register(s *repo.Storage) http.HandlerFunc {
 			return
 		}
 		if err := ValidateLogin(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "", http.StatusBadRequest)
+		}
+		user, err := s.GetUser(r.Context(), req.Email)
+		if err != nil {
+			http.Error(w, "email already exist", http.StatusBadRequest)
 			return
 		}
-		encr, err := hash.HashedPassword(req.Password)
+		encr, err := authctx.HashedPassword(req.Password)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "problem with token", http.StatusBadRequest)
 			return
 		}
 		res := repo.User{
-			Email: req.Email,
+			Email: user.Email,
 			Hash:  encr,
 			ID:    id,
-			Role:  "",
 		}
 		err = s.UserData(r.Context(), res)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "invalid email or password", http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -94,19 +96,19 @@ func Login(s *repo.Storage) http.HandlerFunc {
 			http.Error(w, "invalid email or password", http.StatusUnauthorized)
 			return
 		}
-		validate := hash.CheckPasswordHash(req.Password, user.Hash)
+		validate := authctx.CheckPasswordHash(req.Password, user.Hash)
 		if !validate {
 			http.Error(w, "invalid email or password", http.StatusUnauthorized)
 			return
 		}
-		token, err := token.GenerateJWT(user.ID, user.Role)
+		tokenString, err := token.GenerateJWT(user.ID, user.Role)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "failed to create token", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		res := map[string]string{"token": token}
+		res := map[string]string{"token": tokenString}
 		json.NewEncoder(w).Encode(res)
 
 	}

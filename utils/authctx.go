@@ -1,9 +1,7 @@
-package authctx
+package utils
 
 import (
 	"context"
-
-
 )
 
 type ctxKey struct{}
