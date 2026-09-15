@@ -34,20 +34,17 @@ func Register(s *repo.Storage) http.HandlerFunc {
 		if err := ValidateLogin(&req); err != nil {
 			http.Error(w, "", http.StatusBadRequest)
 		}
-		user, err := s.GetUser(r.Context(), req.Email)
-		if err != nil {
-			http.Error(w, "email already exist", http.StatusBadRequest)
-			return
-		}
+
 		encr, err := authctx.HashedPassword(req.Password)
 		if err != nil {
 			http.Error(w, "problem with token", http.StatusBadRequest)
 			return
 		}
 		res := repo.User{
-			Email: user.Email,
+			Email: req.Email,
 			Hash:  encr,
 			ID:    id,
+			Role: "user",
 		}
 		err = s.UserData(r.Context(), res)
 		if err != nil {

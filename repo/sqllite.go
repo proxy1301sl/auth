@@ -48,7 +48,7 @@ func NewStorage(dbPath string) (*Storage, error) {
 	}
 	db.SetMaxOpenConns(5)
 
-	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS users (hash TEXT, UNIQUE email TEXT, id TEXT, role TEXT NOT NULL DEFAULT 'user' )")
+	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS users (hash TEXT,  email TEXT UNIQUE, id TEXT, role TEXT NOT NULL DEFAULT 'user' )")
 	if err != nil {
 		return nil, err
 	}
