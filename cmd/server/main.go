@@ -26,8 +26,12 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
 
-	r.Post("/api/register", handler.Register(storage))
-	r.Post("/api/login", handler.Login(storage))
+	r.Group(func(r chi.Router) {
+		r.Use(middlewareauth.LimitBody(1 << 20))
+		r.Post("/api/register", handler.Register(storage))
+		r.Post("/api/login", handler.Login(storage))
+	})
+
 	r.Group(func(r chi.Router) {
 		r.Use(middlewareauth.AuthMiddleware)
 		r.Get("/api/profile", handler.Profile(storage))
